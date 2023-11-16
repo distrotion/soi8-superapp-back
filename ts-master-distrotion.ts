@@ -6,7 +6,7 @@ import apiRouter from "./api";
 
 const app = express();
 const router = express.Router();
-const port = 14000;
+const port = 18000;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());

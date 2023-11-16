@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const url = 'mongodb://172.23.10.39:12120';
+const url = 'mongodb://172.23.10.34:27017';
 
 export async function  mongodbinsertMany(db_input: string, collection_input: string, input: any[])  {
   const client = new MongoClient(url);
