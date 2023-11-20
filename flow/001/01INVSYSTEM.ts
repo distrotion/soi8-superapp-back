@@ -16,11 +16,14 @@ router.post('/INVSYSTEM/GETMASTER', async (req, res) => {
   let input = req.body;
   //-------------------------------------
   let output: any = []
-  // console.log(mssql.qurey())
-  var findDB: any = await mssqlquery(`SELECT * FROM [SOI8_INV].[dbo].[MASTER] order by date desc`);
-  let data: any = findDB['recordsets'][0];
+  if(input['ZONE'] != undefined){
 
-  output = data;
+    // console.log(mssql.qurey())
+    var findDB: any = await mssqlquery(`SELECT * FROM [SOI8_INV].[dbo].[MASTER] ${input['ZONE']} order by date desc`);
+    let data: any = findDB['recordsets'][0];
+    output = data;
+  }
+
   res.json(output);
 
 });
@@ -38,7 +41,7 @@ router.post('/INVSYSTEM/GETITEM', async (req, res) => {
     // console.log(mssql.qurey())
     var findDB1: any = await mssqlquery(`SELECT * FROM [SOI8_INV].[dbo].[${input['ZONE']}] order by date desc`);
     let data01: any = findDB1['recordsets'][0];
-    var findDB2: any = await mssqlquery(`SELECT LOTNO , SUM(STOCK_C) AS TotalQuantity FROM [SOI8_INV].[dbo].[${input['ZONE']}] GROUP BY LOTNO `);
+    var findDB2: any = await mssqlquery(`SELECT LOTNO , SUM(STOCK_ALL) AS TotalQuantity FROM [SOI8_INV].[dbo].[${input['ZONE']}] GROUP BY LOTNO `);
     let data02: any = findDB2['recordsets'][0];
 
 
