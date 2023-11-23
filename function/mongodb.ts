@@ -17,7 +17,7 @@ export async function  mongodbfind  (db_input: string, collection_input: string,
   await client.connect();
   const db = client.db(db_input);
   const collection = db.collection(collection_input);
-  let res = await collection.find(input).limit(1000).sort({ "_id": -1 }).toArray();
+  let res = await collection.find(input).limit(0).sort({ "_id": -1 }).toArray();
   await client.close();
   return res;
 };

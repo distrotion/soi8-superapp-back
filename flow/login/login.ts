@@ -35,6 +35,7 @@ router.post('/login', async (req, res) => {
               "Def": findDB[0]['Def'],
               "PD": findDB[0]['PD'],
               "QC": findDB[0]['QC'],
+              "QA": findDB[0]['QA']||'',
               "MFT": findDB[0]['MFT'],
               "RM": findDB[0]['RM'],
               "DL": findDB[0]['DL'],
