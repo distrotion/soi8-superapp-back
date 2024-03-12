@@ -62,9 +62,9 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY6', async (req, res) => {
   if(input['query'] != undefined){
 
     // console.log(mssql.qurey())
-    var findDB: any = await mssqlquery6(`${input['query']}`);
-    let data: any = findDB['recordsets'][0];
-    output = data;
+    // var findDB: any = await mssqlquery6(`${input['query']}`);
+    // let data: any = findDB['recordsets'][0];
+    // output = data;
   }
 
   res.json(output);
