@@ -52,6 +52,26 @@ router.post('/PRODUCTIONHISTORY/FREEQUERYM', async (req, res) => {
 
 });
 
+router.post('/PRODUCTIONHISTORY/SETUPDATE', async (req, res) => {
+  //-------------------------------------
+  console.log("-----PRODUCTIONHISTORY/SETUPDATE-----");
+  console.log(req.body);
+  let input = req.body;
+  //-------------------------------------
+  let output: any = {}
+  if(input['MKMNR'] != undefined && input['ITEM'] != undefined){
+
+    // console.log(mssql.qurey())
+    // console.log({"MKMNR":`${input['MKMNR']}`})
+    let findDB: any = await mongodbupdate(SAP_MASTER,master,{"MKMNR":`${input['MKMNR']}`},{$set:{"qc":`${input['ITEM']}`}});
+  
+    output = {"msg":'OK'}
+  }
+
+  res.json(output);
+
+});
+
 router.post('/PRODUCTIONHISTORY/FREEQUERY6', async (req, res) => {
   //-------------------------------------
   console.log("-----PRODUCTIONHISTORY/FREEQUERY6-----");

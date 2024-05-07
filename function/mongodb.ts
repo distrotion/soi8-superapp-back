@@ -39,5 +39,6 @@ export async function  mongodbupdate  (db_input: string, collection_input: strin
   const collection = db.collection(collection_input);
   let res = await collection.updateOne(input1, input2);
   await client.close();
-  return res;
+  // return res;
+  return "res";
 };
