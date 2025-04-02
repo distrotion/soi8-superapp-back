@@ -109,6 +109,7 @@ router.post('/MANUALPROCESS/SAVEdata', async (req, res) => {
       }
       console.log(query2)
       let db: any = await mssqlquery(`${query2}`);
+      output = db['recordsets'];
     }
 
 
