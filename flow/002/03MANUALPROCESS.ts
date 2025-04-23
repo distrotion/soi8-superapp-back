@@ -101,10 +101,10 @@ router.post('/MANUALPROCESS/SAVEdata', async (req, res) => {
       let query2 = `INSERT INTO [SOI8LOG].[dbo].[NonSCADAProcessinfo] ([NumOrder],[StrChemical],[StrLotNum],[StrBarcode],[NumStep],[NumSp],[NumAct]) VALUES `;
       for (let i = 0; i < listsetup.length; i++) {
         let cooma = ``
-        if(i != 0){
+        if (i != 0) {
           cooma = ','
         }
-        query2 = query2 + ` `+cooma+` ('${input['DATA'][i]['NumOrder']}','${input['DATA'][i]['StrChemical']}','${input['DATA'][i]['StrLotNum']}','${input['DATA'][i]['StrBarcode']}',${input['DATA'][i]['NumStep']},${input['DATA'][i]['NumSp']},${input['DATA'][i]['NumAct']})`
+        query2 = query2 + ` ` + cooma + ` ('${input['DATA'][i]['NumOrder']}','${input['DATA'][i]['StrChemical']}','${input['DATA'][i]['StrLotNum']}','${input['DATA'][i]['StrBarcode']}',${input['DATA'][i]['NumStep']},${input['DATA'][i]['NumSp']},${input['DATA'][i]['NumAct']})`
 
       }
       console.log(query2)
@@ -113,13 +113,66 @@ router.post('/MANUALPROCESS/SAVEdata', async (req, res) => {
     }
 
 
-      
+
   }
 
   res.json(output);
 
 });
 
+router.post('/MANUALPROCESS/SAVEADDdataSET', async (req, res) => {
+  //-------------------------------------
+  console.log("-----MANUALPROCESS/SAVEADDdataSET-----");
+  console.log(req.body);
+  let input = req.body;
+  //-------------------------------------
+  let output: any = []
+  if (input['ORDER'] != undefined && input['CHEM'] != undefined && input['BARCODE'] != undefined && input['SVW'] != undefined && input['PVW'] != undefined) {
+    let query = `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = '${input['ORDER']}'`;
+    let findDB: any = await mssqlquery(query);
+    let datass: any = findDB['recordsets'][0];
+    // let listsetup = input['DATA'];
+    if (datass.length === 0) {
+      let query2 = `INSERT INTO [SAPHANADATA].[dbo].[SOI8DATAADD] ([ORDER],[CHEM],[BARCODE],[SVW],[PVW]) VALUES ('${input['ORDER']}','${input['CHEM']}','${input['BARCODE']}','${input['SVW']}','${input['PVW']}')`;
+      console.log(query2)
+      let db: any = await mssqlquery(`${query2}`);
+      output = db['recordsets'];
+    }
+  }
+
+  res.json(output);
+
+});
+
+router.post('/MANUALPROCESS/SAVEADDdataGET', async (req, res) => {
+  //-------------------------------------
+  console.log("-----MANUALPROCESS/SAVEADDdataGET-----");
+  console.log(req.body);
+  let input = req.body;
+  //-------------------------------------
+  let output: any = []
+  if (input['ORDER'] != undefined) {
+
+    // let listsetup = input['DATA'];
+    // if (listsetup.length > 0) {
+      let query2 = `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = '${input['ORDER']}'`;
+      // console.log(query2)
+      // let db: any = await mssqlquery(`${query2}`);
+      // output = db['recordsets'];
+
+      let findDB: any = await mssqlquery(query2);
+      let data: any = findDB['recordsets'][0];
+
+      output = data;
+    // }
+
+
+
+  }
+
+  res.json(output);
+
+});
 
 
 export default router;
