@@ -21,7 +21,7 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY', async (req, res) => {
   let input = req.body;
   //-------------------------------------
   let output: any = []
-  if(input['query'] != undefined){
+  if (input['query'] != undefined) {
 
     // console.log(mssql.qurey())
     var findDB: any = await mssqlquery(`${input['query']}`);
@@ -29,7 +29,7 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY', async (req, res) => {
     output = data;
   }
 
-  res.json(output);
+  return res.json(output);
 
 });
 
@@ -40,15 +40,15 @@ router.post('/PRODUCTIONHISTORY/FREEQUERYM', async (req, res) => {
   let input = req.body;
   //-------------------------------------
   let output: any = []
-  if(input['query'] != undefined){
+  if (input['query'] != undefined) {
 
     // console.log(mssql.qurey())
-    let findDB: any = await mongodbfind(SAP_MASTER,master,input['query']);
+    let findDB: any = await mongodbfind(SAP_MASTER, master, input['query']);
     let data: any = findDB;
     output = data;
   }
 
-  res.json(output);
+  return res.json(output);
 
 });
 
@@ -59,16 +59,16 @@ router.post('/PRODUCTIONHISTORY/SETUPDATE', async (req, res) => {
   let input = req.body;
   //-------------------------------------
   let output: any = {}
-  if(input['MKMNR'] != undefined && input['ITEM'] != undefined){
+  if (input['MKMNR'] != undefined && input['ITEM'] != undefined) {
 
     // console.log(mssql.qurey())
     // console.log({"MKMNR":`${input['MKMNR']}`})
-    let findDB: any = await mongodbupdate(SAP_MASTER,master,{"MKMNR":`${input['MKMNR']}`},{$set:{"qc":`${input['ITEM']}`}});
-  
-    output = {"msg":'OK'}
+    let findDB: any = await mongodbupdate(SAP_MASTER, master, { "MKMNR": `${input['MKMNR']}` }, { $set: { "qc": `${input['ITEM']}` } });
+
+    output = { "msg": 'OK' }
   }
 
-  res.json(output);
+  return res.json(output);
 
 });
 
@@ -79,17 +79,26 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY6', async (req, res) => {
   let input = req.body;
   //-------------------------------------
   let output: any = []
-  if(input['query'] != undefined){
+  if (input['query'] != undefined) {
 
     // console.log(mssql.qurey())
     // var findDB: any = await mssqlquery6(`${input['query']}`);
     // let data: any = findDB['recordsets'][0];
     // output = data;
+    let query = `${input['query']}`;
+    let findDB: any = await mssqlquery(query);
+    let data: any = findDB['recordsets'][0];
+
+    output = data;
   }
 
-  res.json(output);
+  return res.json(output);
 
 });
+
+
+
+
 
 
 
