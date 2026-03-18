@@ -1,104 +1,80 @@
 import express from "express";
 import { Router } from "express";
-// import mssql from "../../function/mssql";
 import { mssqlquery } from "../../function/mssql";
-import { mssqlquery6 } from "../../function/mssql6";
-import { mongodbinsertMany, mongodbfind, mongodbfindsome, mongodbupdate } from "../../function/mongodb";
-// let mssql = require('../../function/mssql');
-// import mongodb from "../../function/mongodb";
-// import httpreq from "../../function/axios";
-// import axios from "axios";
+import { mongodbfind, mongodbupdate } from "../../function/mongodb";
+import { requireApiKey } from "../../middleware/auth";
 
-let SAP_MASTER = 'SAP_MASTER';
-let master = 'master2';
+const SAP_MASTER = 'SAP_MASTER';
+const master = 'master2';
 
 const router: Router = express.Router();
 
-router.post('/PRODUCTIONHISTORY/FREEQUERY', async (req, res) => {
-  //-------------------------------------
+// FREEQUERY endpoints execute raw SQL — protected by API key
+router.post('/PRODUCTIONHISTORY/FREEQUERY', requireApiKey, async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERY-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['query'] != undefined) {
+  const input = req.body;
 
-    // console.log(mssql.qurey())
-    var findDB: any = await mssqlquery(`${input['query']}`);
-    let data: any = findDB['recordsets'][0];
-    output = data;
+  try {
+    let output: any[] = [];
+    if (input['query'] !== undefined) {
+      const findDB: any = await mssqlquery(`${input['query']}`);
+      output = findDB['recordsets'][0];
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('PRODUCTIONHISTORY/FREEQUERY error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  return res.json(output);
-
 });
 
-router.post('/PRODUCTIONHISTORY/FREEQUERYM', async (req, res) => {
-  //-------------------------------------
+router.post('/PRODUCTIONHISTORY/FREEQUERYM', requireApiKey, async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERYM-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['query'] != undefined) {
+  const input = req.body;
 
-    // console.log(mssql.qurey())
-    let findDB: any = await mongodbfind(SAP_MASTER, master, input['query']);
-    let data: any = findDB;
-    output = data;
+  try {
+    let output: any[] = [];
+    if (input['query'] !== undefined) {
+      output = await mongodbfind(SAP_MASTER, master, input['query']);
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('PRODUCTIONHISTORY/FREEQUERYM error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  return res.json(output);
-
 });
 
 router.post('/PRODUCTIONHISTORY/SETUPDATE', async (req, res) => {
-  //-------------------------------------
   console.log("-----PRODUCTIONHISTORY/SETUPDATE-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = {}
-  if (input['MKMNR'] != undefined && input['ITEM'] != undefined) {
+  const input = req.body;
 
-    // console.log(mssql.qurey())
-    // console.log({"MKMNR":`${input['MKMNR']}`})
-    let findDB: any = await mongodbupdate(SAP_MASTER, master, { "MKMNR": `${input['MKMNR']}` }, { $set: { "qc": `${input['ITEM']}` } });
-
-    output = { "msg": 'OK' }
+  try {
+    let output: any = {};
+    if (input['MKMNR'] !== undefined && input['ITEM'] !== undefined) {
+      await mongodbupdate(SAP_MASTER, master, { "MKMNR": `${input['MKMNR']}` }, { $set: { "qc": `${input['ITEM']}` } });
+      output = { "msg": 'OK' };
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('PRODUCTIONHISTORY/SETUPDATE error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  return res.json(output);
-
 });
 
-router.post('/PRODUCTIONHISTORY/FREEQUERY6', async (req, res) => {
-  //-------------------------------------
+router.post('/PRODUCTIONHISTORY/FREEQUERY6', requireApiKey, async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERY6-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['query'] != undefined) {
+  const input = req.body;
 
-    let query = `${input['query']}`;
-    let findDB: any = await mssqlquery(query);
-    let data: any = findDB['recordsets'][0];
-
-    output = data;
+  try {
+    let output: any[] = [];
+    if (input['query'] !== undefined) {
+      const findDB: any = await mssqlquery(`${input['query']}`);
+      output = findDB['recordsets'][0];
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('PRODUCTIONHISTORY/FREEQUERY6 error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  return res.json(output);
-
 });
-
-
-
-
-
-
-
-
 
 export default router;
-

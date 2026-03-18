@@ -1,44 +1,37 @@
 import { MongoClient } from 'mongodb';
 
-const url = 'mongodb://172.23.10.34:27017';
+let client: MongoClient | null = null;
 
-export async function  mongodbinsertMany(db_input: string, collection_input: string, input: any[])  {
-  const client = new MongoClient(url);
-  await client.connect();
-  const db = client.db(db_input);
-  const collection = db.collection(collection_input);
-  let res = await collection.insertMany(input);
-  await client.close();
-  return res;
-};
+async function getClient(): Promise<MongoClient> {
+  if (!client) {
+    const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+    client = new MongoClient(url);
+    await client.connect();
+  }
+  return client;
+}
 
-export async function  mongodbfind  (db_input: string, collection_input: string, input: any) {
-  const client = new MongoClient(url);
-  await client.connect();
-  const db = client.db(db_input);
-  const collection = db.collection(collection_input);
-  let res = await collection.find(input).limit(0).sort({ "_id": -1 }).toArray();
-  await client.close();
-  return res;
-};
+export async function mongodbinsertMany(db_input: string, collection_input: string, input: any[]): Promise<any> {
+  const c = await getClient();
+  const collection = c.db(db_input).collection(collection_input);
+  return collection.insertMany(input);
+}
 
-export async function  mongodbfindsome  (db_input: string, collection_input: string, input: any)  {
-  const client = new MongoClient(url);
-  await client.connect();
-  const db = client.db(db_input);
-  const collection = db.collection(collection_input);
-  let res = await collection.find(input).limit(500).sort({ "_id": -1 }).project({"PO":1,"CP":1,"ALL_DONE":1}).toArray();
-  await client.close();
-  return res;
-};
+export async function mongodbfind(db_input: string, collection_input: string, input: any): Promise<any> {
+  const c = await getClient();
+  const collection = c.db(db_input).collection(collection_input);
+  return collection.find(input).limit(0).sort({ "_id": -1 }).toArray();
+}
 
-export async function  mongodbupdate  (db_input: string, collection_input: string, input1: any, input2: any)  {
-  const client = new MongoClient(url);
-  await client.connect();
-  const db = client.db(db_input);
-  const collection = db.collection(collection_input);
-  let res = await collection.updateOne(input1, input2);
-  await client.close();
-  // return res;
+export async function mongodbfindsome(db_input: string, collection_input: string, input: any): Promise<any> {
+  const c = await getClient();
+  const collection = c.db(db_input).collection(collection_input);
+  return collection.find(input).limit(500).sort({ "_id": -1 }).project({ "PO": 1, "CP": 1, "ALL_DONE": 1 }).toArray();
+}
+
+export async function mongodbupdate(db_input: string, collection_input: string, input1: any, input2: any): Promise<any> {
+  const c = await getClient();
+  const collection = c.db(db_input).collection(collection_input);
+  await collection.updateOne(input1, input2);
   return "res";
-};
+}

@@ -1,179 +1,168 @@
 import express from "express";
 import { Router } from "express";
-// import mssql from "../../function/mssql";
 import { mssqlquery } from "../../function/mssql";
 import { mssqlquery6 } from "../../function/mssql6";
-import { mongodbinsertMany, mongodbfind, mongodbfindsome, mongodbupdate } from "../../function/mongodb";
-// let mssql = require('../../function/mssql');
-// import mongodb from "../../function/mongodb";
-// import httpreq from "../../function/axios";
-// import axios from "axios";
+import { mongodbinsertMany, mongodbfind, mongodbupdate } from "../../function/mongodb";
+import { requireApiKey } from "../../middleware/auth";
 
-let SAP_MASTER = 'SAP_MASTER';
-let master = 'master2';
+const SAP_MASTER = 'SAP_MASTER';
+const master = 'master2';
 
 const router: Router = express.Router();
 
-router.post('/MANUALPROCESS/FREEQUERY', async (req, res) => {
-  //-------------------------------------
+// FREEQUERY executes raw SQL — protected by API key
+router.post('/MANUALPROCESS/FREEQUERY', requireApiKey, async (req, res) => {
   console.log("-----MANUALPROCESS/FREEQUERY-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['query'] != undefined) {
+  const input = req.body;
 
-    // console.log(mssql.qurey())
-    var findDB: any = await mssqlquery6(`${input['query']}`);
-    let data: any = findDB['recordsets'][0];
-    output = data;
+  try {
+    let output: any[] = [];
+    if (input['query'] !== undefined) {
+      const findDB: any = await mssqlquery6(`${input['query']}`);
+      output = findDB['recordsets'][0];
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('MANUALPROCESS/FREEQUERY error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json(output);
-
 });
-
 
 router.post('/MANUALPROCESS/selecfml', async (req, res) => {
-  //-------------------------------------
   console.log("-----MANUALPROCESS/selecfml-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['MAT'] != undefined) {
+  const input = req.body;
 
-    let queryS = ` SELECT * FROM [ScadaReport].[dbo].[SOI8_ProductName] where [CP_Master] = '${input[`MAT`]}';`
+  try {
+    let output: any[] = [];
+    if (input['MAT'] !== undefined) {
+      const db: any = await mssqlquery6(
+        `SELECT * FROM [ScadaReport].[dbo].[SOI8_ProductName] WHERE [CP_Master] = @mat`,
+        { mat: input['MAT'] }
+      );
 
-    // console.log(mssql.qurey())
-    let findDB: any = await mssqlquery6(`${queryS}`);
-    let db: any = findDB;
-    // output = data;
+      if (db['recordsets'].length > 0) {
+        const datadb = db['recordsets'][0];
+        if (datadb.length > 0) {
+          const FML_Name = `${datadb[0]['Product_Name']}`.split("|");
+          const fml = FML_Name[0];
+          const query2 = `
+            SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeCMC]   WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeCoil]  WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeGUM]   WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeHydro] WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeKG]    WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeLQ]    WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeNox]   WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeNR]    WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipePM]    WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeRTM]   WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            UNION SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeSCM]   WHERE Fml=@fml AND Ver='0' AND Chm NOT LIKE '%+%'
+            ORDER BY ID ASC`;
 
-    if (db['recordsets'].length > 0) {
-      let datadb = db['recordsets'][0];
-      // output = datadb
-      if (datadb.length > 0) {
-        //Product_Name
-        let FML_Name = `${datadb[0][`Product_Name`]}`.split("|")
-        console.log(FML_Name)
-        let query2 = `SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeCMC] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeCoil] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeGUM] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'  
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeHydro] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%' 
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeKG] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%' 
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeLQ] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeNox] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'  
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeNR] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'  
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipePM] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'  
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeRTM] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'  
-union SELECT ID,Fml,Ver,A,Chm,Bc,W From [ScadaReport].[dbo].[RecipeSCM] where Fml = '${FML_Name[0]}' and Ver = '0' and Chm Not LIKE '%+%'
-Order by ID ASC`
-
-        let db: any = await mssqlquery6(`${query2}`);
-        console.log(db)
-        if (db['recordsets'].length > 0) {
-          let datadb = db['recordsets'][0];
-          output = datadb
+          const db2: any = await mssqlquery6(query2, { fml });
+          if (db2['recordsets'].length > 0) {
+            output = db2['recordsets'][0];
+          }
         }
       }
     }
+    return res.json(output);
+  } catch (err) {
+    console.error('MANUALPROCESS/selecfml error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json(output);
-
 });
 
-
-
-
 router.post('/MANUALPROCESS/SAVEdata', async (req, res) => {
-  //-------------------------------------
-  console.log("-----MANUALPROCESS/selecfml-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['DATA'] != undefined) {
+  console.log("-----MANUALPROCESS/SAVEdata-----");
+  const input = req.body;
 
-    let listsetup = input['DATA'];
-    if (listsetup.length > 0) {
-      let query2 = `INSERT INTO [SOI8LOG].[dbo].[NonSCADAProcessinfo] ([NumOrder],[StrChemical],[StrLotNum],[StrBarcode],[NumStep],[NumSp],[NumAct]) VALUES `;
+  try {
+    let output: any[] = [];
+    const listsetup: any[] = input['DATA'];
+    if (Array.isArray(listsetup) && listsetup.length > 0) {
+      const valuePlaceholders: string[] = [];
+      const params: Record<string, any> = {};
+
       for (let i = 0; i < listsetup.length; i++) {
-        let cooma = ``
-        if (i != 0) {
-          cooma = ','
-        }
-        query2 = query2 + ` ` + cooma + ` ('${input['DATA'][i]['NumOrder']}','${input['DATA'][i]['StrChemical']}','${input['DATA'][i]['StrLotNum']}','${input['DATA'][i]['StrBarcode']}',${input['DATA'][i]['NumStep']},${input['DATA'][i]['NumSp']},${input['DATA'][i]['NumAct']})`
-
+        valuePlaceholders.push(
+          `(@NumOrder${i},@StrChemical${i},@StrLotNum${i},@StrBarcode${i},@NumStep${i},@NumSp${i},@NumAct${i})`
+        );
+        params[`NumOrder${i}`]    = listsetup[i]['NumOrder'];
+        params[`StrChemical${i}`] = listsetup[i]['StrChemical'];
+        params[`StrLotNum${i}`]   = listsetup[i]['StrLotNum'];
+        params[`StrBarcode${i}`]  = listsetup[i]['StrBarcode'];
+        params[`NumStep${i}`]     = listsetup[i]['NumStep'];
+        params[`NumSp${i}`]       = listsetup[i]['NumSp'];
+        params[`NumAct${i}`]      = listsetup[i]['NumAct'];
       }
-      console.log(query2)
-      let db: any = await mssqlquery(`${query2}`);
+
+      const query = `INSERT INTO [SOI8LOG].[dbo].[NonSCADAProcessinfo]
+        ([NumOrder],[StrChemical],[StrLotNum],[StrBarcode],[NumStep],[NumSp],[NumAct])
+        VALUES ${valuePlaceholders.join(',')}`;
+
+      const db: any = await mssqlquery(query, params);
       output = db['recordsets'];
     }
-
-
-
+    return res.json(output);
+  } catch (err) {
+    console.error('MANUALPROCESS/SAVEdata error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json(output);
-
 });
 
 router.post('/MANUALPROCESS/SAVEADDdataSET', async (req, res) => {
-  //-------------------------------------
   console.log("-----MANUALPROCESS/SAVEADDdataSET-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['ORDER'] != undefined && input['CHEM'] != undefined && input['BARCODE'] != undefined && input['SVW'] != undefined && input['PVW'] != undefined) {
-    let query = `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = '${input['ORDER']}'`;
-    let findDB: any = await mssqlquery(query);
-    let datass: any = findDB['recordsets'][0];
-    // let listsetup = input['DATA'];
-    if (datass.length === 0) {
-      let query2 = `INSERT INTO [SAPHANADATA].[dbo].[SOI8DATAADD] ([ORDER],[CHEM],[BARCODE],[SVW],[PVW]) VALUES ('${input['ORDER']}','${input['CHEM']}','${input['BARCODE']}','${input['SVW']}','${input['PVW']}')`;
-      console.log(query2)
-      let db: any = await mssqlquery(`${query2}`);
-      output = db['recordsets'];
+  const input = req.body;
+
+  try {
+    let output: any[] = [];
+    if (input['ORDER'] !== undefined && input['CHEM'] !== undefined && input['BARCODE'] !== undefined && input['SVW'] !== undefined && input['PVW'] !== undefined) {
+      const findDB: any = await mssqlquery(
+        `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = @order`,
+        { order: input['ORDER'] }
+      );
+      const datass: any[] = findDB['recordsets'][0];
+      if (datass.length === 0) {
+        const db: any = await mssqlquery(
+          `INSERT INTO [SAPHANADATA].[dbo].[SOI8DATAADD] ([ORDER],[CHEM],[BARCODE],[SVW],[PVW])
+           VALUES (@order,@chem,@barcode,@svw,@pvw)`,
+          {
+            order:   input['ORDER'],
+            chem:    input['CHEM'],
+            barcode: input['BARCODE'],
+            svw:     input['SVW'],
+            pvw:     input['PVW'],
+          }
+        );
+        output = db['recordsets'];
+      }
     }
+    return res.json(output);
+  } catch (err) {
+    console.error('MANUALPROCESS/SAVEADDdataSET error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json(output);
-
 });
 
 router.post('/MANUALPROCESS/SAVEADDdataGET', async (req, res) => {
-  //-------------------------------------
   console.log("-----MANUALPROCESS/SAVEADDdataGET-----");
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = []
-  if (input['ORDER'] != undefined) {
+  const input = req.body;
 
-    // let listsetup = input['DATA'];
-    // if (listsetup.length > 0) {
-      let query2 = `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = '${input['ORDER']}'`;
-      // console.log(query2)
-      // let db: any = await mssqlquery(`${query2}`);
-      // output = db['recordsets'];
-
-      let findDB: any = await mssqlquery(query2);
-      let data: any = findDB['recordsets'][0];
-
-      output = data;
-    // }
-
-
-
+  try {
+    let output: any[] = [];
+    if (input['ORDER'] !== undefined) {
+      const findDB: any = await mssqlquery(
+        `SELECT * FROM [SAPHANADATA].[dbo].[SOI8DATAADD] WHERE [ORDER] = @order`,
+        { order: input['ORDER'] }
+      );
+      output = findDB['recordsets'][0];
+    }
+    return res.json(output);
+  } catch (err) {
+    console.error('MANUALPROCESS/SAVEADDdataGET error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json(output);
-
 });
 
-
 export default router;
-

@@ -1,57 +1,67 @@
 import express from "express";
 import { Router } from "express";
-// import mssql from "../../function/mssql";
-// import { mssqlquery } from "../../function/mssql";
-// let mssql = require('../../function/mssql');
-// import mongodb from "../../function/mongodb";
-// import httpreq from "../../function/axios";
-// import axios from "axios";
-import { mongodbinsertMany, mongodbfind, mongodbfindsome, mongodbupdate } from "../../function/mongodb";
-
+import bcrypt from "bcryptjs";
+import { mongodbfind, mongodbupdate } from "../../function/mongodb";
 
 const router: Router = express.Router();
 
-
-let Auth  = 'Auth';
-let user  = 'user';
+const Auth = 'Auth';
+const user = 'user';
 
 router.post('/login', async (req, res) => {
-  //-------------------------------------
-  console.log(req.body);
-  let input = req.body;
-  //-------------------------------------
-  let output: any = {"return":'NOK'}
-  let findDB: any = await mongodbfind(Auth,user,{"ID":input['ID']});
-  console.log(findDB['PASS']);
-  console.log(input['PASS']);
-  if(findDB.length > 0){
+  const input = req.body;
 
-      if(findDB[0]['PASS'] === input['PASS']){
-          output = {
-              "ID":findDB[0]['ID'],
-              "NAME":findDB[0]['NAME'],
-              "LV":findDB[0]['LV'] || '1',
-              "Section": findDB[0]['Section'],
-              "Def": findDB[0]['Def'],
-              "PD": findDB[0]['PD'],
-              "QC": findDB[0]['QC'],
-              "QA": findDB[0]['QA']||'',
-              "MFT": findDB[0]['MFT'],
-              "RM": findDB[0]['RM'],
-              "DL": findDB[0]['DL'],
-              "return":'OK'
-          }
-      }else{
-          output = {"return":'PASSWORD INCORRECT'}
-      }
-
-      
+  if (!input['ID'] || !input['PASS']) {
+    return res.status(400).json({ "return": 'NOK' });
   }
-  
 
-  res.json(output);
+  try {
+    const findDB: any[] = await mongodbfind(Auth, user, { "ID": input['ID'] });
+
+    if (findDB.length === 0) {
+      return res.json({ "return": 'NOK' });
+    }
+
+    const stored = findDB[0];
+    const storedPass: string = stored['PASS'] || '';
+    const inputPass: string = input['PASS'];
+
+    let isMatch = false;
+
+    if (storedPass.startsWith('$2')) {
+      // bcrypt hash — compare normally
+      isMatch = await bcrypt.compare(inputPass, storedPass);
+    } else {
+      // Legacy plain-text password — compare and migrate to bcrypt
+      isMatch = storedPass === inputPass;
+      if (isMatch) {
+        const hashed = await bcrypt.hash(inputPass, 10);
+        await mongodbupdate(Auth, user, { "ID": input['ID'] }, { $set: { "PASS": hashed } });
+      }
+    }
+
+    if (!isMatch) {
+      return res.json({ "return": 'PASSWORD INCORRECT' });
+    }
+
+    return res.json({
+      "ID": stored['ID'],
+      "NAME": stored['NAME'],
+      "LV": stored['LV'] || '1',
+      "Section": stored['Section'],
+      "Def": stored['Def'],
+      "PD": stored['PD'],
+      "QC": stored['QC'],
+      "QA": stored['QA'] || '',
+      "MFT": stored['MFT'],
+      "RM": stored['RM'],
+      "DL": stored['DL'],
+      "return": 'OK'
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.status(500).json({ "return": 'NOK' });
+  }
 });
-
-
 
 export default router;
