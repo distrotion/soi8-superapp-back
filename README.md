@@ -26,3 +26,11 @@ In short, ts-node server.ts == tsc && node dist/server.js
 
 # what is ts-node-dev? 
 it works like nodemon for typescript
+
+
+# Build TypeScript → JavaScript (output ไปที่ ./dist)
+npm run build
+# รัน production จาก JS ที่ build แล้ว
+npm start
+# รัน dev mode (ไม่ต้อง build ก็รันได้)
+npm run dev

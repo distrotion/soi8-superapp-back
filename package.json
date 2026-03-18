@@ -4,6 +4,9 @@
   "description": "yarn start",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/soi8-superapp-back.js",
+    "dev": "ts-node-dev soi8-superapp-back.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
