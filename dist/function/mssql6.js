@@ -34,37 +34,43 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mssqlquery6 = void 0;
 const sql = __importStar(require("mssql"));
-function getConfig() {
-    return {
-        user: process.env.MSSQL6_USER || '',
-        password: process.env.MSSQL6_PASSWORD || '',
-        database: '',
-        server: process.env.MSSQL6_SERVER || '',
-        pool: {
-            idleTimeoutMillis: 30000
-        },
-        options: {
-            encrypt: false,
-            trustServerCertificate: true,
-        }
-    };
+let pool = null;
+function getPool() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (pool && pool.connected)
+            return pool;
+        pool = yield sql.connect({
+            user: process.env.MSSQL6_USER || '',
+            password: process.env.MSSQL6_PASSWORD || '',
+            database: '',
+            server: process.env.MSSQL6_SERVER || '',
+            pool: {
+                max: 10,
+                min: 2,
+                idleTimeoutMillis: 30000,
+            },
+            options: {
+                encrypt: false,
+                trustServerCertificate: true,
+            },
+        });
+        pool.on('error', (err) => {
+            console.error('MSSQL6 pool error:', err);
+            pool = null;
+        });
+        return pool;
+    });
 }
 function mssqlquery6(query, params) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pool = yield sql.connect(getConfig());
-        try {
-            const request = pool.request();
-            if (params) {
-                for (const [key, value] of Object.entries(params)) {
-                    request.input(key, value);
-                }
+        const p = yield getPool();
+        const request = p.request();
+        if (params) {
+            for (const [key, value] of Object.entries(params)) {
+                request.input(key, value);
             }
-            const result = yield request.query(query);
-            return result;
         }
-        finally {
-            yield pool.close();
-        }
+        return request.query(query);
     });
 }
 exports.mssqlquery6 = mssqlquery6;
