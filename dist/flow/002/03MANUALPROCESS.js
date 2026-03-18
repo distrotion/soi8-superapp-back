@@ -15,12 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mssql_1 = require("../../function/mssql");
 const mssql6_1 = require("../../function/mssql6");
-const auth_1 = require("../../middleware/auth");
 const SAP_MASTER = 'SAP_MASTER';
 const master = 'master2';
 const router = express_1.default.Router();
-// FREEQUERY executes raw SQL — protected by API key
-router.post('/MANUALPROCESS/FREEQUERY', auth_1.requireApiKey, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/MANUALPROCESS/FREEQUERY', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("-----MANUALPROCESS/FREEQUERY-----");
     const input = req.body;
     try {

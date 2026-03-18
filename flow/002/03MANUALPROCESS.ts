@@ -3,15 +3,12 @@ import { Router } from "express";
 import { mssqlquery } from "../../function/mssql";
 import { mssqlquery6 } from "../../function/mssql6";
 import { mongodbinsertMany, mongodbfind, mongodbupdate } from "../../function/mongodb";
-import { requireApiKey } from "../../middleware/auth";
-
 const SAP_MASTER = 'SAP_MASTER';
 const master = 'master2';
 
 const router: Router = express.Router();
 
-// FREEQUERY executes raw SQL — protected by API key
-router.post('/MANUALPROCESS/FREEQUERY', requireApiKey, async (req, res) => {
+router.post('/MANUALPROCESS/FREEQUERY', async (req, res) => {
   console.log("-----MANUALPROCESS/FREEQUERY-----");
   const input = req.body;
 

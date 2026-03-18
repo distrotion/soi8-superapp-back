@@ -2,15 +2,12 @@ import express from "express";
 import { Router } from "express";
 import { mssqlquery } from "../../function/mssql";
 import { mongodbfind, mongodbupdate } from "../../function/mongodb";
-import { requireApiKey } from "../../middleware/auth";
-
 const SAP_MASTER = 'SAP_MASTER';
 const master = 'master2';
 
 const router: Router = express.Router();
 
-// FREEQUERY endpoints execute raw SQL — protected by API key
-router.post('/PRODUCTIONHISTORY/FREEQUERY', requireApiKey, async (req, res) => {
+router.post('/PRODUCTIONHISTORY/FREEQUERY', async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERY-----");
   const input = req.body;
 
@@ -27,7 +24,7 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY', requireApiKey, async (req, res) => {
   }
 });
 
-router.post('/PRODUCTIONHISTORY/FREEQUERYM', requireApiKey, async (req, res) => {
+router.post('/PRODUCTIONHISTORY/FREEQUERYM', async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERYM-----");
   const input = req.body;
 
@@ -60,7 +57,7 @@ router.post('/PRODUCTIONHISTORY/SETUPDATE', async (req, res) => {
   }
 });
 
-router.post('/PRODUCTIONHISTORY/FREEQUERY6', requireApiKey, async (req, res) => {
+router.post('/PRODUCTIONHISTORY/FREEQUERY6', async (req, res) => {
   console.log("-----PRODUCTIONHISTORY/FREEQUERY6-----");
   const input = req.body;
 

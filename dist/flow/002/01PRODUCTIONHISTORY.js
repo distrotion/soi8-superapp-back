@@ -15,12 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mssql_1 = require("../../function/mssql");
 const mongodb_1 = require("../../function/mongodb");
-const auth_1 = require("../../middleware/auth");
 const SAP_MASTER = 'SAP_MASTER';
 const master = 'master2';
 const router = express_1.default.Router();
-// FREEQUERY endpoints execute raw SQL — protected by API key
-router.post('/PRODUCTIONHISTORY/FREEQUERY', auth_1.requireApiKey, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/PRODUCTIONHISTORY/FREEQUERY', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("-----PRODUCTIONHISTORY/FREEQUERY-----");
     const input = req.body;
     try {
@@ -36,7 +34,7 @@ router.post('/PRODUCTIONHISTORY/FREEQUERY', auth_1.requireApiKey, (req, res) => 
         return res.status(500).json({ error: 'Internal server error' });
     }
 }));
-router.post('/PRODUCTIONHISTORY/FREEQUERYM', auth_1.requireApiKey, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/PRODUCTIONHISTORY/FREEQUERYM', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("-----PRODUCTIONHISTORY/FREEQUERYM-----");
     const input = req.body;
     try {
@@ -67,7 +65,7 @@ router.post('/PRODUCTIONHISTORY/SETUPDATE', (req, res) => __awaiter(void 0, void
         return res.status(500).json({ error: 'Internal server error' });
     }
 }));
-router.post('/PRODUCTIONHISTORY/FREEQUERY6', auth_1.requireApiKey, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/PRODUCTIONHISTORY/FREEQUERY6', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("-----PRODUCTIONHISTORY/FREEQUERY6-----");
     const input = req.body;
     try {
